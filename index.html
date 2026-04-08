@@ -53,25 +53,76 @@
     .toggle-btn:hover:not(.active) {
       background: #1f2f5a;
     }
+
+    /* ── CARD ── */
     .card {
       background: #16213e;
       border-radius: 20px;
-      padding: 50px 40px;
+      padding: 30px 36px;
       text-align: center;
       width: 100%;
-      max-width: 500px;
+      max-width: 420px;
       box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-      min-height: 200px;
       display: flex;
       flex-direction: column;
+      gap: 0;
+      overflow: hidden;
+    }
+
+    /* category header strip */
+    .card-header {
+      background: #e94560;
+      margin: -30px -36px 0 -36px;
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-radius: 20px 20px 0 0;
+    }
+    .card-header .category {
+      font-size: 0.85rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: #fff;
+    }
+    .card-header .points {
+      font-size: 0.85rem;
+      color: #fff;
+      opacity: 0.9;
+    }
+
+    /* word rows */
+    .word-row {
+      display: flex;
+      align-items: center;
+      padding: 13px 4px;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      gap: 14px;
+    }
+    .word-row:last-child { border-bottom: none; }
+    .word-number {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #e94560;
+      color: #fff;
+      font-size: 0.8rem;
+      font-weight: bold;
+      display: flex;
       align-items: center;
       justify-content: center;
-      gap: 16px;
+      flex-shrink: 0;
     }
-    .card .category { font-size: 0.9rem; color: #e94560; text-transform: uppercase; letter-spacing: 2px; }
-    .card .points { font-size: 0.9rem; color: #aaa; }
-    .card .phrase { font-size: 2rem; font-weight: bold; color: #fff; }
-    .card .empty { font-size: 1.2rem; color: #aaa; }
+    .word-text {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #fff;
+      text-align: left;
+    }
+
+    .empty { font-size: 1.2rem; color: #aaa; padding: 40px 0; }
+
     .next-btn {
       margin-top: 24px;
       padding: 14px 36px;
@@ -103,11 +154,16 @@
     <button class="toggle-btn" aria-pressed="false" onclick="selectFilter('points', '5', this)">⭐⭐⭐ 5 bodů</button>
     <button class="toggle-btn" aria-pressed="false" onclick="selectFilter('points', '6', this)">⭐⭐⭐⭐ 6 bodů</button>
   </div>
-  <div class="card">
-    <div class="category" id="cardCategory">–</div>
-    <div class="phrase" id="cardPhrase">Stiskni tlačítko!</div>
-    <div class="points" id="cardPoints">–</div>
+
+  <div class="card" id="card">
+    <div class="card-header">
+      <span class="category" id="cardCategory">–</span>
+      <span class="points" id="cardPoints">–</span>
+    </div>
+    <div class="empty" id="cardEmpty">Stiskni tlačítko!</div>
+    <div id="wordList"></div>
   </div>
+
   <button class="next-btn" onclick="pickCard()">🃏 Další karta</button>
 
   <script>
@@ -148,23 +204,50 @@
       btn.setAttribute('aria-pressed', 'true');
     }
 
+    function shuffle(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
     function pickCard() {
       let pool = allPhrases;
       if (selectedCategory !== 'all') pool = pool.filter(p => p.category === selectedCategory);
       if (selectedPoints !== 'all') pool = pool.filter(p => p.points === parseInt(selectedPoints));
 
+      const wordListEl = document.getElementById('wordList');
+      const emptyEl = document.getElementById('cardEmpty');
+      const catEl = document.getElementById('cardCategory');
+      const ptsEl = document.getElementById('cardPoints');
+
       if (pool.length === 0) {
-        document.getElementById('cardPhrase').textContent = 'Žádné karty nenalezeny!';
-        document.getElementById('cardCategory').textContent = '–';
-        document.getElementById('cardPoints').textContent = '–';
+        wordListEl.innerHTML = '';
+        emptyEl.textContent = 'Žádné karty nenalezeny!';
+        emptyEl.style.display = '';
+        catEl.textContent = '–';
+        ptsEl.textContent = '–';
         return;
       }
 
-      const card = pool[Math.floor(Math.random() * pool.length)];
-      document.getElementById('cardPhrase').textContent = card.phrase;
-      document.getElementById('cardCategory').textContent = card.category;
-      const suffix = card.points >= 5 ? 'bodů' : 'body';
-      document.getElementById('cardPoints').textContent = '⭐'.repeat(card.points) + ` (${card.points} ${suffix})`;
+      // Pick one random entry to get category & points label, then pick 6 words from that same pool
+      const sample = pool[Math.floor(Math.random() * pool.length)];
+      const shuffled = shuffle([...pool]);
+      const six = shuffled.slice(0, 6);
+
+      catEl.textContent = sample.category;
+      const pts = sample.points;
+      const suffix = pts >= 5 ? 'bodů' : 'body';
+      ptsEl.textContent = '⭐'.repeat(pts) + ` ${pts} ${suffix}`;
+
+      emptyEl.style.display = 'none';
+      wordListEl.innerHTML = six.map((item, i) =>
+        `<div class="word-row">
+          <div class="word-number">${i + 1}</div>
+          <div class="word-text">${item.phrase}</div>
+        </div>`
+      ).join('');
     }
 
     async function loadAll() {
