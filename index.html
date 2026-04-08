@@ -113,6 +113,9 @@
       color: #fff;
       text-align: left;
     }
+    .word-text.pink {
+      color: #ff69b4;
+    }
 
     .empty { font-size: 1.2rem; color: #aaa; padding: 40px 0; }
 
@@ -173,6 +176,7 @@
 
     let allPhrases = [];
     let selectedPoints = 3;
+    let usedPhrases = new Set();
 
     /* Fixed card layout: 6 slots in order */
     const cardSlots = [
@@ -186,6 +190,7 @@
 
     function selectFilter(type, value, btn) {
       selectedPoints = parseInt(value);
+      usedPhrases.clear();
       document.querySelectorAll('#pointsGroup .toggle-btn').forEach(b => {
         b.classList.remove('active');
         b.setAttribute('aria-pressed', 'false');
@@ -208,12 +213,31 @@
       const wordListEl = document.getElementById('wordList');
       const emptyEl = document.getElementById('cardEmpty');
 
-      /* Group by category */
+      /* Group by category, excluding already-used phrases */
       const byCategory = {};
       pool.forEach(p => {
+        if (usedPhrases.has(p.category + '::' + p.phrase)) return;
         if (!byCategory[p.category]) byCategory[p.category] = [];
         byCategory[p.category].push(p);
       });
+
+      /* Reset used phrases if any category is running low */
+      const needed = { 'Kreslení': 2, 'Vysvětlování': 2, 'Pantomima': 2 };
+      let shouldReset = false;
+      for (const cat in needed) {
+        if (!byCategory[cat] || byCategory[cat].length < needed[cat]) {
+          shouldReset = true;
+          break;
+        }
+      }
+      if (shouldReset) {
+        usedPhrases.clear();
+        for (const cat in byCategory) byCategory[cat] = [];
+        pool.forEach(p => {
+          if (!byCategory[p.category]) byCategory[p.category] = [];
+          byCategory[p.category].push(p);
+        });
+      }
 
       /* Shuffle each category */
       for (const cat in byCategory) shuffle(byCategory[cat]);
@@ -239,13 +263,20 @@
         return;
       }
 
+      /* Mark picked phrases as used */
+      picks.forEach(p => usedPhrases.add(p.category + '::' + p.phrase));
+
+      /* Randomly pick one slot to highlight in pink */
+      const pinkIndex = Math.floor(Math.random() * picks.length);
+
       emptyEl.style.display = 'none';
       wordListEl.innerHTML = picks.map((item, i) => {
         const slot = cardSlots[i];
+        const pinkClass = i === pinkIndex ? ' pink' : '';
         return `<div class="word-row">
           <div class="word-number n${i + 1}">${i + 1}</div>
           <div class="action-label">${slot.icon} ${slot.label}</div>
-          <div class="word-text">${item.phrase}</div>
+          <div class="word-text${pinkClass}">${item.phrase}</div>
         </div>`;
       }).join('');
     }
@@ -268,7 +299,7 @@
     loadAll();
 
     // Show build version so users can verify they have the latest
-    document.getElementById('versionFooter').textContent = 'v2026.04.08';
+    document.getElementById('versionFooter').textContent = 'v2026.04.08.2';
   </script>
 </body>
 </html>
