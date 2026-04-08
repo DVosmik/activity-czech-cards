@@ -18,15 +18,25 @@
       padding: 20px;
     }
     h1 { font-size: 2rem; margin-bottom: 10px; color: #e94560; }
-    .category-buttons {
+    .filter-group {
       display: flex;
       gap: 10px;
       flex-wrap: wrap;
       justify-content: center;
-      margin-bottom: 20px;
+      margin-bottom: 14px;
     }
-    .cat-btn {
-      padding: 14px 22px;
+    .filter-label {
+      width: 100%;
+      text-align: center;
+      font-size: 0.8rem;
+      color: #aaa;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 2px;
+    }
+    .toggle-btn {
+      padding: 12px 20px;
+      margin-top: 0;
       border-radius: 12px;
       border: 2px solid #e94560;
       font-size: 1rem;
@@ -34,14 +44,13 @@
       color: #eee;
       cursor: pointer;
       transition: background 0.2s, color 0.2s;
-      min-width: 120px;
     }
-    .cat-btn.active {
+    .toggle-btn.active {
       background: #e94560;
       color: #fff;
       font-weight: bold;
     }
-    .cat-btn:hover:not(.active) {
+    .toggle-btn:hover:not(.active) {
       background: #1f2f5a;
     }
     .card {
@@ -63,7 +72,7 @@
     .card .points { font-size: 0.9rem; color: #aaa; }
     .card .phrase { font-size: 2rem; font-weight: bold; color: #fff; }
     .card .empty { font-size: 1.2rem; color: #aaa; }
-    button {
+    .next-btn {
       margin-top: 24px;
       padding: 14px 36px;
       font-size: 1.1rem;
@@ -74,23 +83,32 @@
       cursor: pointer;
       transition: background 0.2s;
     }
-    button:hover { background: #c73652; }
+    .next-btn:hover { background: #c73652; }
   </style>
 </head>
 <body>
   <h1>🎲 Activity – Česky</h1>
-  <div class="category-buttons">
-    <button class="cat-btn active" aria-pressed="true" onclick="selectCategory('all', this)">Vše</button>
-    <button class="cat-btn" aria-pressed="false" onclick="selectCategory('Kreslení', this)">🎨 Kreslení</button>
-    <button class="cat-btn" aria-pressed="false" onclick="selectCategory('Pantomima', this)">🕺 Pantomima</button>
-    <button class="cat-btn" aria-pressed="false" onclick="selectCategory('Vysvětlování', this)">💬 Vysvětlování</button>
+  <div class="filter-group" id="categoryGroup">
+    <div class="filter-label">Kategorie</div>
+    <button class="toggle-btn active" aria-pressed="true" onclick="selectFilter('category', 'all', this)">Vše</button>
+    <button class="toggle-btn" aria-pressed="false" onclick="selectFilter('category', 'Kreslení', this)">🎨 Kreslení</button>
+    <button class="toggle-btn" aria-pressed="false" onclick="selectFilter('category', 'Pantomima', this)">🕺 Pantomima</button>
+    <button class="toggle-btn" aria-pressed="false" onclick="selectFilter('category', 'Vysvětlování', this)">💬 Vysvětlování</button>
+  </div>
+  <div class="filter-group" id="pointsGroup">
+    <div class="filter-label">Obtížnost</div>
+    <button class="toggle-btn active" aria-pressed="true" onclick="selectFilter('points', 'all', this)">Vše</button>
+    <button class="toggle-btn" aria-pressed="false" onclick="selectFilter('points', '3', this)">⭐ 3 body</button>
+    <button class="toggle-btn" aria-pressed="false" onclick="selectFilter('points', '4', this)">⭐⭐ 4 body</button>
+    <button class="toggle-btn" aria-pressed="false" onclick="selectFilter('points', '5', this)">⭐⭐⭐ 5 bodů</button>
+    <button class="toggle-btn" aria-pressed="false" onclick="selectFilter('points', '6', this)">⭐⭐⭐⭐ 6 bodů</button>
   </div>
   <div class="card">
     <div class="category" id="cardCategory">–</div>
     <div class="phrase" id="cardPhrase">Stiskni tlačítko!</div>
     <div class="points" id="cardPoints">–</div>
   </div>
-  <button onclick="pickCard()">🃏 Další karta</button>
+  <button class="next-btn" onclick="pickCard()">🃏 Další karta</button>
 
   <script>
     const files = [
@@ -110,13 +128,22 @@
 
     let allPhrases = [];
     let selectedCategory = 'all';
+    let selectedPoints = 'all';
 
-    function selectCategory(cat, btn) {
-      selectedCategory = cat;
-      document.querySelectorAll('.cat-btn').forEach(b => {
-        b.classList.remove('active');
-        b.setAttribute('aria-pressed', 'false');
-      });
+    function selectFilter(type, value, btn) {
+      if (type === 'category') {
+        selectedCategory = value;
+        document.querySelectorAll('#categoryGroup .toggle-btn').forEach(b => {
+          b.classList.remove('active');
+          b.setAttribute('aria-pressed', 'false');
+        });
+      } else {
+        selectedPoints = value;
+        document.querySelectorAll('#pointsGroup .toggle-btn').forEach(b => {
+          b.classList.remove('active');
+          b.setAttribute('aria-pressed', 'false');
+        });
+      }
       btn.classList.add('active');
       btn.setAttribute('aria-pressed', 'true');
     }
@@ -124,6 +151,7 @@
     function pickCard() {
       let pool = allPhrases;
       if (selectedCategory !== 'all') pool = pool.filter(p => p.category === selectedCategory);
+      if (selectedPoints !== 'all') pool = pool.filter(p => p.points === parseInt(selectedPoints));
 
       if (pool.length === 0) {
         document.getElementById('cardPhrase').textContent = 'Žádné karty nenalezeny!';
