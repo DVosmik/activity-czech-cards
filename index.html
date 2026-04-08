@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Activity – Česky</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #1a1a2e;
+      color: #eee;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    h1 { font-size: 2rem; margin-bottom: 10px; color: #e94560; }
+    .controls {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    select {
+      padding: 10px 16px;
+      border-radius: 8px;
+      border: none;
+      font-size: 1rem;
+      background: #16213e;
+      color: #eee;
+      cursor: pointer;
+    }
+    .card {
+      background: #16213e;
+      border-radius: 20px;
+      padding: 50px 40px;
+      text-align: center;
+      width: 100%;
+      max-width: 500px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      min-height: 200px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+    }
+    .card .category { font-size: 0.9rem; color: #e94560; text-transform: uppercase; letter-spacing: 2px; }
+    .card .points { font-size: 0.9rem; color: #aaa; }
+    .card .phrase { font-size: 2rem; font-weight: bold; color: #fff; }
+    .card .empty { font-size: 1.2rem; color: #aaa; }
+    button {
+      margin-top: 24px;
+      padding: 14px 36px;
+      font-size: 1.1rem;
+      border: none;
+      border-radius: 10px;
+      background: #e94560;
+      color: white;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:hover { background: #c73652; }
+  </style>
+</head>
+<body>
+  <h1>🎲 Activity – Česky</h1>
+  <div class="controls">
+    <select id="categorySelect">
+      <option value="all">Všechny kategorie</option>
+      <option value="Kreslení">🎨 Kreslení</option>
+      <option value="Pantomima">🕺 Pantomima</option>
+      <option value="Vysvětlování">💬 Vysvětlování</option>
+    </select>
+    <select id="pointsSelect">
+      <option value="all">Všechny obtížnosti</option>
+      <option value="3">⭐ 3 body (Lehké)</option>
+      <option value="4">⭐⭐ 4 body (Střední)</option>
+      <option value="5">⭐⭐⭐ 5 bodů (Těžké)</option>
+      <option value="6">⭐⭐⭐⭐ 6 bodů (Velmi těžké)</option>
+    </select>
+  </div>
+  <div class="card">
+    <div class="category" id="cardCategory">–</div>
+    <div class="phrase" id="cardPhrase">Stiskni tlačítko!</div>
+    <div class="points" id="cardPoints">–</div>
+  </div>
+  <button onclick="pickCard()">🃏 Další karta</button>
+
+  <script>
+    const files = [
+      'data/kresleni_3body.json',
+      'data/kresleni_4body.json',
+      'data/kresleni_5body.json',
+      'data/kresleni_6body.json',
+      'data/pantomima_3body.json',
+      'data/pantomima_4body.json',
+      'data/pantomima_5body.json',
+      'data/pantomima_6body.json',
+      'data/vysvetlovani_3body.json',
+      'data/vysvetlovani_4body.json',
+      'data/vysvetlovani_5body.json',
+      'data/vysvetlovani_6body.json',
+    ];
+
+    let allPhrases = [];
+
+    async function loadAll() {
+      for (const file of files) {
+        try {
+          const res = await fetch(file);
+          if (!res.ok) continue;
+          const data = await res.json();
+          data.phrases.forEach(p => allPhrases.push({
+            phrase: p,
+            category: data.category,
+            points: data.points
+          }));
+        } catch(e) {}
+      }
+    }
+
+    function pickCard() {
+      const cat = document.getElementById('categorySelect').value;
+      const pts = document.getElementById('pointsSelect').value;
+
+      let pool = allPhrases;
+      if (cat !== 'all') pool = pool.filter(p => p.category === cat);
+      if (pts !== 'all') pool = pool.filter(p => p.points === parseInt(pts));
+
+      if (pool.length === 0) {
+        document.getElementById('cardPhrase').textContent = 'Žádné karty nenalezeny!';
+        document.getElementById('cardCategory').textContent = '–';
+        document.getElementById('cardPoints').textContent = '–';
+        return;
+      }
+
+      const card = pool[Math.floor(Math.random() * pool.length)];
+      document.getElementById('cardPhrase').textContent = card.phrase;
+      document.getElementById('cardCategory').textContent = card.category;
+      document.getElementById('cardPoints').textContent = '⭐'.repeat(card.points) + ` (${card.points} body)`;
+    }
+
+    loadAll();
+  </script>
+</body>
+</html>
