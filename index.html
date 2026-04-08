@@ -92,10 +92,10 @@
       justify-content: center;
       flex-shrink: 0;
     }
-    .word-number.n1 { background: #4CAF50; }
+    .word-number.n1 { background: #FFEB3B; color: #333; }
     .word-number.n2 { background: #03A9F4; }
     .word-number.n3 { background: #E91E63; }
-    .word-number.n4 { background: #FFEB3B; color: #333; }
+    .word-number.n4 { background: #4CAF50; }
     .word-number.n5 { background: #1565C0; }
     .word-number.n6 { background: #FF9800; }
     .action-label {
@@ -112,9 +112,6 @@
       font-weight: 600;
       color: #fff;
       text-align: left;
-    }
-    .word-text.pink {
-      color: #ff69b4;
     }
 
     .empty { font-size: 1.2rem; color: #aaa; padding: 40px 0; }
@@ -143,8 +140,7 @@
   <h1>🎲 Activity – Česky</h1>
   <div class="filter-group" id="pointsGroup">
     <div class="filter-label">Obtížnost</div>
-    <button class="toggle-btn active" aria-pressed="true" onclick="selectFilter('points', 'all', this)">Vše</button>
-    <button class="toggle-btn" aria-pressed="false" onclick="selectFilter('points', '3', this)">⭐ 3 body</button>
+    <button class="toggle-btn active" aria-pressed="true" onclick="selectFilter('points', '3', this)">⭐ 3 body</button>
     <button class="toggle-btn" aria-pressed="false" onclick="selectFilter('points', '4', this)">⭐⭐ 4 body</button>
     <button class="toggle-btn" aria-pressed="false" onclick="selectFilter('points', '5', this)">⭐⭐⭐ 5 bodů</button>
     <button class="toggle-btn" aria-pressed="false" onclick="selectFilter('points', '6', this)">⭐⭐⭐⭐ 6 bodů</button>
@@ -176,16 +172,20 @@
     ];
 
     let allPhrases = [];
-    let selectedPoints = 'all';
+    let selectedPoints = 3;
 
-    const categoryIcons = {
-      'Kreslení': '🎨',
-      'Pantomima': '🕺',
-      'Vysvětlování': '💬'
-    };
+    /* Fixed card layout: 6 slots in order */
+    const cardSlots = [
+      { category: 'Kreslení',     icon: '🎨', label: 'Kreslení' },
+      { category: 'Vysvětlování', icon: '💬', label: 'Vysvětlování' },
+      { category: 'Pantomima',    icon: '🕺', label: 'Pantomima' },
+      { category: 'Kreslení',     icon: '🎨', label: 'Kreslení' },
+      { category: 'Vysvětlování', icon: '💬', label: 'Vysvětlování' },
+      { category: 'Pantomima',    icon: '🕺', label: 'Pantomima' },
+    ];
 
     function selectFilter(type, value, btn) {
-      selectedPoints = value;
+      selectedPoints = parseInt(value);
       document.querySelectorAll('#pointsGroup .toggle-btn').forEach(b => {
         b.classList.remove('active');
         b.setAttribute('aria-pressed', 'false');
@@ -203,30 +203,49 @@
     }
 
     function pickCard() {
-      let pool = allPhrases;
-      if (selectedPoints !== 'all') pool = pool.filter(p => p.points === parseInt(selectedPoints));
+      const pool = allPhrases.filter(p => p.points === selectedPoints);
 
       const wordListEl = document.getElementById('wordList');
       const emptyEl = document.getElementById('cardEmpty');
 
-      if (pool.length === 0) {
+      /* Group by category */
+      const byCategory = {};
+      pool.forEach(p => {
+        if (!byCategory[p.category]) byCategory[p.category] = [];
+        byCategory[p.category].push(p);
+      });
+
+      /* Shuffle each category */
+      for (const cat in byCategory) shuffle(byCategory[cat]);
+
+      /* Pick phrases for each slot */
+      const picks = [];
+      const used = { 'Kreslení': 0, 'Vysvětlování': 0, 'Pantomima': 0 };
+
+      for (const slot of cardSlots) {
+        const available = byCategory[slot.category];
+        if (!available || used[slot.category] >= available.length) {
+          picks.push(null);
+        } else {
+          picks.push(available[used[slot.category]]);
+          used[slot.category]++;
+        }
+      }
+
+      if (picks.some(p => p === null)) {
         wordListEl.innerHTML = '';
         emptyEl.textContent = 'Žádné karty nenalezeny!';
         emptyEl.style.display = '';
         return;
       }
 
-      const shuffled = shuffle([...pool]);
-      const six = shuffled.slice(0, 6);
-
       emptyEl.style.display = 'none';
-      const pinkIdx = Math.floor(Math.random() * six.length);
-      wordListEl.innerHTML = six.map((item, i) => {
-        const icon = categoryIcons[item.category] || '';
+      wordListEl.innerHTML = picks.map((item, i) => {
+        const slot = cardSlots[i];
         return `<div class="word-row">
           <div class="word-number n${i + 1}">${i + 1}</div>
-          <div class="action-label">${icon} ${item.category}</div>
-          <div class="word-text${i === pinkIdx ? ' pink' : ''}">${item.phrase}</div>
+          <div class="action-label">${slot.icon} ${slot.label}</div>
+          <div class="word-text">${item.phrase}</div>
         </div>`;
       }).join('');
     }
