@@ -120,6 +120,9 @@
       color: #fff;
       text-align: left;
     }
+    .word-text.pink {
+      color: #ff69b4;
+    }
 
     .empty { font-size: 1.2rem; color: #aaa; padding: 40px 0; }
 
@@ -242,10 +245,11 @@
       ptsEl.textContent = '⭐'.repeat(pts) + ` ${pts} ${suffix}`;
 
       emptyEl.style.display = 'none';
+      const pinkIdx = Math.floor(Math.random() * six.length);
       wordListEl.innerHTML = six.map((item, i) =>
         `<div class="word-row">
           <div class="word-number">${i + 1}</div>
-          <div class="word-text">${item.phrase}</div>
+          <div class="word-text${i === pinkIdx ? ' pink' : ''}">${item.phrase}</div>
         </div>`
       ).join('');
     }
