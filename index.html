@@ -66,30 +66,6 @@
       display: flex;
       flex-direction: column;
       gap: 0;
-      overflow: hidden;
-    }
-
-    /* category header strip */
-    .card-header {
-      background: #e94560;
-      margin: -30px -36px 0 -36px;
-      padding: 12px 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-radius: 20px 20px 0 0;
-    }
-    .card-header .category {
-      font-size: 0.85rem;
-      font-weight: bold;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      color: #fff;
-    }
-    .card-header .points {
-      font-size: 0.85rem;
-      color: #fff;
-      opacity: 0.9;
     }
 
     /* word rows */
@@ -105,7 +81,6 @@
       width: 28px;
       height: 28px;
       border-radius: 50%;
-      background: #e94560;
       color: #fff;
       font-size: 0.8rem;
       font-weight: bold;
@@ -113,6 +88,21 @@
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
+    }
+    .word-number.n1 { background: #4CAF50; }
+    .word-number.n2 { background: #03A9F4; }
+    .word-number.n3 { background: #E91E63; }
+    .word-number.n4 { background: #FFEB3B; color: #333; }
+    .word-number.n5 { background: #1565C0; }
+    .word-number.n6 { background: #FF9800; }
+    .action-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #aaa;
+      flex-shrink: 0;
+      min-width: 90px;
+      text-align: left;
     }
     .word-text {
       font-size: 1.25rem;
@@ -128,10 +118,10 @@
 
     .next-btn {
       margin-top: 24px;
-      padding: 14px 36px;
-      font-size: 1.1rem;
+      padding: 20px 48px;
+      font-size: 1.4rem;
       border: none;
-      border-radius: 10px;
+      border-radius: 14px;
       background: #e94560;
       color: white;
       cursor: pointer;
@@ -142,13 +132,6 @@
 </head>
 <body>
   <h1>🎲 Activity – Česky</h1>
-  <div class="filter-group" id="categoryGroup">
-    <div class="filter-label">Kategorie</div>
-    <button class="toggle-btn active" aria-pressed="true" onclick="selectFilter('category', 'all', this)">Vše</button>
-    <button class="toggle-btn" aria-pressed="false" onclick="selectFilter('category', 'Kreslení', this)">🎨 Kreslení</button>
-    <button class="toggle-btn" aria-pressed="false" onclick="selectFilter('category', 'Pantomima', this)">🕺 Pantomima</button>
-    <button class="toggle-btn" aria-pressed="false" onclick="selectFilter('category', 'Vysvětlování', this)">💬 Vysvětlování</button>
-  </div>
   <div class="filter-group" id="pointsGroup">
     <div class="filter-label">Obtížnost</div>
     <button class="toggle-btn active" aria-pressed="true" onclick="selectFilter('points', 'all', this)">Vše</button>
@@ -159,10 +142,6 @@
   </div>
 
   <div class="card" id="card">
-    <div class="card-header">
-      <span class="category" id="cardCategory">–</span>
-      <span class="points" id="cardPoints">–</span>
-    </div>
     <div class="empty" id="cardEmpty">Stiskni tlačítko!</div>
     <div id="wordList"></div>
   </div>
@@ -186,23 +165,20 @@
     ];
 
     let allPhrases = [];
-    let selectedCategory = 'all';
     let selectedPoints = 'all';
 
+    const categoryIcons = {
+      'Kreslení': '🎨',
+      'Pantomima': '🕺',
+      'Vysvětlování': '💬'
+    };
+
     function selectFilter(type, value, btn) {
-      if (type === 'category') {
-        selectedCategory = value;
-        document.querySelectorAll('#categoryGroup .toggle-btn').forEach(b => {
-          b.classList.remove('active');
-          b.setAttribute('aria-pressed', 'false');
-        });
-      } else {
-        selectedPoints = value;
-        document.querySelectorAll('#pointsGroup .toggle-btn').forEach(b => {
-          b.classList.remove('active');
-          b.setAttribute('aria-pressed', 'false');
-        });
-      }
+      selectedPoints = value;
+      document.querySelectorAll('#pointsGroup .toggle-btn').forEach(b => {
+        b.classList.remove('active');
+        b.setAttribute('aria-pressed', 'false');
+      });
       btn.classList.add('active');
       btn.setAttribute('aria-pressed', 'true');
     }
@@ -217,41 +193,31 @@
 
     function pickCard() {
       let pool = allPhrases;
-      if (selectedCategory !== 'all') pool = pool.filter(p => p.category === selectedCategory);
       if (selectedPoints !== 'all') pool = pool.filter(p => p.points === parseInt(selectedPoints));
 
       const wordListEl = document.getElementById('wordList');
       const emptyEl = document.getElementById('cardEmpty');
-      const catEl = document.getElementById('cardCategory');
-      const ptsEl = document.getElementById('cardPoints');
 
       if (pool.length === 0) {
         wordListEl.innerHTML = '';
         emptyEl.textContent = 'Žádné karty nenalezeny!';
         emptyEl.style.display = '';
-        catEl.textContent = '–';
-        ptsEl.textContent = '–';
         return;
       }
 
-      // Pick one random entry to get category & points label, then pick 6 words from that same pool
-      const sample = pool[Math.floor(Math.random() * pool.length)];
       const shuffled = shuffle([...pool]);
       const six = shuffled.slice(0, 6);
 
-      catEl.textContent = sample.category;
-      const pts = sample.points;
-      const suffix = pts >= 5 ? 'bodů' : 'body';
-      ptsEl.textContent = '⭐'.repeat(pts) + ` ${pts} ${suffix}`;
-
       emptyEl.style.display = 'none';
       const pinkIdx = Math.floor(Math.random() * six.length);
-      wordListEl.innerHTML = six.map((item, i) =>
-        `<div class="word-row">
-          <div class="word-number">${i + 1}</div>
+      wordListEl.innerHTML = six.map((item, i) => {
+        const icon = categoryIcons[item.category] || '';
+        return `<div class="word-row">
+          <div class="word-number n${i + 1}">${i + 1}</div>
+          <div class="action-label">${icon} ${item.category}</div>
           <div class="word-text${i === pinkIdx ? ' pink' : ''}">${item.phrase}</div>
-        </div>`
-      ).join('');
+        </div>`;
+      }).join('');
     }
 
     async function loadAll() {
