@@ -18,21 +18,31 @@
       padding: 20px;
     }
     h1 { font-size: 2rem; margin-bottom: 10px; color: #e94560; }
-    .controls {
+    .category-buttons {
       display: flex;
       gap: 10px;
-      margin-bottom: 20px;
       flex-wrap: wrap;
       justify-content: center;
+      margin-bottom: 20px;
     }
-    select {
-      padding: 10px 16px;
-      border-radius: 8px;
-      border: none;
+    .cat-btn {
+      padding: 14px 22px;
+      border-radius: 12px;
+      border: 2px solid #e94560;
       font-size: 1rem;
       background: #16213e;
       color: #eee;
       cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+      min-width: 120px;
+    }
+    .cat-btn.active {
+      background: #e94560;
+      color: #fff;
+      font-weight: bold;
+    }
+    .cat-btn:hover:not(.active) {
+      background: #1f2f5a;
     }
     .card {
       background: #16213e;
@@ -69,20 +79,11 @@
 </head>
 <body>
   <h1>🎲 Activity – Česky</h1>
-  <div class="controls">
-    <select id="categorySelect">
-      <option value="all">Všechny kategorie</option>
-      <option value="Kreslení">🎨 Kreslení</option>
-      <option value="Pantomima">🕺 Pantomima</option>
-      <option value="Vysvětlování">💬 Vysvětlování</option>
-    </select>
-    <select id="pointsSelect">
-      <option value="all">Všechny obtížnosti</option>
-      <option value="3">⭐ 3 body (Lehké)</option>
-      <option value="4">⭐⭐ 4 body (Střední)</option>
-      <option value="5">⭐⭐⭐ 5 bodů (Těžké)</option>
-      <option value="6">⭐⭐⭐⭐ 6 bodů (Velmi těžké)</option>
-    </select>
+  <div class="category-buttons">
+    <button class="cat-btn active" aria-pressed="true" onclick="selectCategory('all', this)">Vše</button>
+    <button class="cat-btn" aria-pressed="false" onclick="selectCategory('Kreslení', this)">🎨 Kreslení</button>
+    <button class="cat-btn" aria-pressed="false" onclick="selectCategory('Pantomima', this)">🕺 Pantomima</button>
+    <button class="cat-btn" aria-pressed="false" onclick="selectCategory('Vysvětlování', this)">💬 Vysvětlování</button>
   </div>
   <div class="card">
     <div class="category" id="cardCategory">–</div>
@@ -108,6 +109,35 @@
     ];
 
     let allPhrases = [];
+    let selectedCategory = 'all';
+
+    function selectCategory(cat, btn) {
+      selectedCategory = cat;
+      document.querySelectorAll('.cat-btn').forEach(b => {
+        b.classList.remove('active');
+        b.setAttribute('aria-pressed', 'false');
+      });
+      btn.classList.add('active');
+      btn.setAttribute('aria-pressed', 'true');
+    }
+
+    function pickCard() {
+      let pool = allPhrases;
+      if (selectedCategory !== 'all') pool = pool.filter(p => p.category === selectedCategory);
+
+      if (pool.length === 0) {
+        document.getElementById('cardPhrase').textContent = 'Žádné karty nenalezeny!';
+        document.getElementById('cardCategory').textContent = '–';
+        document.getElementById('cardPoints').textContent = '–';
+        return;
+      }
+
+      const card = pool[Math.floor(Math.random() * pool.length)];
+      document.getElementById('cardPhrase').textContent = card.phrase;
+      document.getElementById('cardCategory').textContent = card.category;
+      const suffix = card.points >= 5 ? 'bodů' : 'body';
+      document.getElementById('cardPoints').textContent = '⭐'.repeat(card.points) + ` (${card.points} ${suffix})`;
+    }
 
     async function loadAll() {
       for (const file of files) {
@@ -122,27 +152,6 @@
           }));
         } catch(e) {}
       }
-    }
-
-    function pickCard() {
-      const cat = document.getElementById('categorySelect').value;
-      const pts = document.getElementById('pointsSelect').value;
-
-      let pool = allPhrases;
-      if (cat !== 'all') pool = pool.filter(p => p.category === cat);
-      if (pts !== 'all') pool = pool.filter(p => p.points === parseInt(pts));
-
-      if (pool.length === 0) {
-        document.getElementById('cardPhrase').textContent = 'Žádné karty nenalezeny!';
-        document.getElementById('cardCategory').textContent = '–';
-        document.getElementById('cardPoints').textContent = '–';
-        return;
-      }
-
-      const card = pool[Math.floor(Math.random() * pool.length)];
-      document.getElementById('cardPhrase').textContent = card.phrase;
-      document.getElementById('cardCategory').textContent = card.category;
-      document.getElementById('cardPoints').textContent = '⭐'.repeat(card.points) + ` (${card.points} body)`;
     }
 
     loadAll();
