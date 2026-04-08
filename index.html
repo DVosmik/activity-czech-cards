@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+  <meta http-equiv="Pragma" content="no-cache"/>
+  <meta http-equiv="Expires" content="0"/>
   <title>Activity – Česky</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -128,6 +131,12 @@
       transition: background 0.2s;
     }
     .next-btn:hover { background: #c73652; }
+    .version-footer {
+      margin-top: 18px;
+      font-size: 0.7rem;
+      color: #555;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
@@ -142,11 +151,13 @@
   </div>
 
   <div class="card" id="card">
-    <div class="empty" id="cardEmpty">Stiskni tlačítko!</div>
+    <div class="empty" id="cardEmpty">🃏 Táhni kartu!</div>
     <div id="wordList"></div>
   </div>
 
   <button class="next-btn" onclick="pickCard()">🃏 Další karta</button>
+
+  <div class="version-footer" id="versionFooter"></div>
 
   <script>
     const files = [
@@ -236,6 +247,9 @@
     }
 
     loadAll();
+
+    // Show build version so users can verify they have the latest
+    document.getElementById('versionFooter').textContent = 'v2026.04.08';
   </script>
 </body>
 </html>
