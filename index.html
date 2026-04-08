@@ -8,6 +8,7 @@
   <meta http-equiv="Expires" content="0"/>
   <title>Activity – Česky</title>
   <style>
+    :root { --pink-highlight: #ff69b4; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -113,8 +114,12 @@
       color: #fff;
       text-align: left;
     }
+    .word-row.pink-row {
+      border-left: 4px solid var(--pink-highlight);
+      padding-left: 8px;
+    }
     .word-text.pink {
-      color: #ff69b4;
+      color: var(--pink-highlight);
     }
 
     .empty { font-size: 1.2rem; color: #aaa; padding: 40px 0; }
@@ -272,11 +277,14 @@
       emptyEl.style.display = 'none';
       wordListEl.innerHTML = picks.map((item, i) => {
         const slot = cardSlots[i];
-        const pinkClass = i === pinkIndex ? ' pink' : '';
-        return `<div class="word-row">
+        const isPink = i === pinkIndex;
+        const rowClass = isPink ? ' pink-row' : '';
+        const textStyle = isPink ? ' style="color: #ff69b4;"' : '';
+        const pinkClass = isPink ? ' pink' : '';
+        return `<div class="word-row${rowClass}">
           <div class="word-number n${i + 1}">${i + 1}</div>
           <div class="action-label">${slot.icon} ${slot.label}</div>
-          <div class="word-text${pinkClass}">${item.phrase}</div>
+          <div class="word-text${pinkClass}"${textStyle}>${item.phrase}</div>
         </div>`;
       }).join('');
     }
@@ -299,7 +307,7 @@
     loadAll();
 
     // Show build version so users can verify they have the latest
-    document.getElementById('versionFooter').textContent = 'v2026.04.08.2';
+    document.getElementById('versionFooter').textContent = 'v2026.04.08.3';
   </script>
 </body>
 </html>
